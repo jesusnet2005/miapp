@@ -1,0 +1,36 @@
+name: CI – Construcción y publicación App SpringBoot
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE: ${{ env.REGISTRY }}/${{ github.repository_owner }}/miapp
+
+jobs:
+  build_and_publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set IMAGE_TAG
+        id: vars
+        run: echo "IMAGE_TAG=${GITHUB_SHA::8}" >> $GITHUB_ENV
+
+      - name: Build and push image (multi-stage Dockerfile)
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ env.IMAGE_TAG }}
+            ${{ env.IMAGE }}:latest
+          # Optional: build args, platforms
